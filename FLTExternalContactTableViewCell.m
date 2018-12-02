@@ -19,12 +19,6 @@
 
 @implementation FLTExternalContactTableViewCell
 
-- (void)awakeFromNib
-{
-    [super awakeFromNib];
-    self.selectionButton.clipsToBounds = YES;
-}
-
 - (void)prepareForReuse
 {
     [super prepareForReuse];
