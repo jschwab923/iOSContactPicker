@@ -159,8 +159,8 @@
         for (NSDictionary *contactInfo in self.allContacts) {
             NSArray *contacts = contactInfo[@"contacts"];
             for (CNContact *contact in contacts) {
-                NSString *name = [NSString stringWithFormat:@"%@%@%@", contact.givenName ?: @"", contact.nickname ?: @"", contact.familyName ?: @""];
-                if ([name containsString:trimmedSearchText]) {
+                NSString *name = [NSString stringWithFormat:@"%@%@%@", contact.givenName ?: contact.nickname ?: @"", contact.familyName ?: @""];
+                if ([name.lowerCaseString containsString:trimmedSearchText.lowerCaseString]) {
                     [filteredContacts addObject:contact];
                 }
             }
