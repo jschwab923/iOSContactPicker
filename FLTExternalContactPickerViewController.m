@@ -11,8 +11,6 @@
 #import "FLTExternalContactPickerViewController.h"
 #import "FLTExternalContactTableViewCell.h"
 
-#import "FLTContact+CoreDataClass.h"
-
 @interface FLTExternalContactPickerViewController () <UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UISearchResultsUpdating>
 
 @property (weak, nonatomic) IBOutlet UITableView *contactTableView;
@@ -32,19 +30,37 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [FLTContact iosDeviceContacts].then(^ (NSArray<CNContact *> *contacts) {
-        if (contacts.count) {
-            
-            [self sortContacts:contacts];
-            
-            self.selectedContacts = [NSMutableSet new];
-            
-            dispatch_async(dispatch_get_main_queue(), ^(void) {
-                [self.contactTableView reloadData];
-            });
-        }
-    });
     self.contactTableView.tableHeaderView = self.searchController.searchBar;
+}
+
++ (AnyPromise *)iosDeviceContacts
+{
+    CNContactStore *store = [CNContactStore new];
+    [store requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+        if (granted == YES) {
+            NSArray *keys = @[CNContactFamilyNameKey, CNContactGivenNameKey, CNContactDatesKey, CNContactBirthdayKey, CNContactNicknameKey, CNContactPostalAddressesKey, CNContactThumbnailImageDataKey, CNContactEmailAddressesKey, CNContactRelationsKey, CNContactPhoneNumbersKey];
+            CNContactFetchRequest *request = [[CNContactFetchRequest alloc] initWithKeysToFetch:keys];
+            request.sortOrder = CNContactSortOrderGivenName;
+            
+            NSMutableArray *contacts = [NSMutableArray new];
+            NSError *error = nil;
+            [store enumerateContactsWithFetchRequest:request error:&error usingBlock:^(CNContact * __nonnull iosContact, BOOL * __nonnull stop) {
+                [contacts addObject:iosContact];
+            }];
+            
+            if (contacts.count) {
+                
+                [self sortContacts:contacts];
+                
+                self.selectedContacts = [NSMutableSet new];
+                
+                dispatch_async(dispatch_get_main_queue(), ^(void) {
+                    [self.contactTableView reloadData];
+                });
+            }
+            resolve(contacts);
+        }
+    }];
 }
 
 - (void)sortContacts:(NSArray *)contacts
